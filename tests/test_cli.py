@@ -10,9 +10,9 @@ import libcst as cst
 import libcst.metadata as md
 import yaml
 
-import replace_imports
+import import_surgeon
 # Import the script modules
-from replace_imports import (
+from import_surgeon.cli import (
     DottedReplacer,
     ImportReplacer,
     _attr_to_dotted,
@@ -77,11 +77,11 @@ class TestSafeReplaceImports(unittest.TestCase):
         enc = detect_encoding(file_path)
         self.assertEqual(enc, "utf-8")  # Default fallback
 
-    @patch("replace_imports.HAS_CHARDET", True)
+    @patch("import_surgeon.cli.HAS_CHARDET", True)
     @patch(
-        "replace_imports.py_tokenize.detect_encoding", return_value=(None, [])
+        "import_surgeon.cli.py_tokenize.detect_encoding", return_value=(None, [])
     )
-    @patch("replace_imports.UniversalDetector")
+    @patch("import_surgeon.cli.UniversalDetector")
     def test_detect_encoding_chardet(self, mock_detector, mock_tokenize):
         mock_inst = mock_detector.return_value
         mock_inst.result = {"encoding": "ascii"}
@@ -621,13 +621,13 @@ except ImportError:
         self.assertEqual(len(files), 3)
 
     # Test safety checks
-    @patch("replace_imports.find_git_root", return_value=Path("/tmp"))
+    @patch("import_surgeon.cli.find_git_root", return_value=Path("/tmp"))
     @patch("subprocess.run")
     def test_git_is_clean(self, mock_run, mock_find):
         mock_run.return_value = MagicMock(stdout="")
         self.assertTrue(git_is_clean(self.temp_path))
 
-    @patch("replace_imports.find_git_root", return_value=Path("/tmp"))
+    @patch("import_surgeon.cli.find_git_root", return_value=Path("/tmp"))
     @patch("subprocess.run")
     def test_git_is_clean_dirty(self, mock_run, mock_find):
         mock_run.return_value = MagicMock(stdout="M file.py")
@@ -691,9 +691,9 @@ except ImportError:
             self.assertEqual(exit_code, 2)
             mock_err.assert_called_with("Target not found: %s", Path("/nonexistent"))
 
-    @patch("replace_imports.find_py_files", return_value=[])
+    @patch("import_surgeon.cli.find_py_files", return_value=[])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(False, "UNCHANGED", {"warnings": []}),
     )
     @patch("builtins.print")
@@ -710,13 +710,13 @@ except ImportError:
         exit_code = main(argv)
         self.assertEqual(exit_code, 0)
 
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "MODIFIED", {"warnings": []}),
     )
-    @patch("replace_imports.git_is_clean", return_value=True)
-    @patch("replace_imports.git_commit_changes", return_value=True)
+    @patch("import_surgeon.cli.git_is_clean", return_value=True)
+    @patch("import_surgeon.cli.git_commit_changes", return_value=True)
     @patch("builtins.print")
     def test_main_apply_auto_commit(
         self, mock_print, mock_commit, mock_clean, mock_process, mock_find
@@ -735,15 +735,15 @@ except ImportError:
             str(self.temp_path),
         ]
         with patch(
-            "replace_imports.find_git_root", return_value=self.temp_path
+            "import_surgeon.cli.find_git_root", return_value=self.temp_path
         ):
             exit_code = main(argv)
             self.assertEqual(exit_code, 0)
             mock_commit.assert_called()
 
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(False, "ERROR", {"warnings": []}),
     )
     @patch("builtins.print")
@@ -760,9 +760,9 @@ except ImportError:
         exit_code = main(argv)
         self.assertEqual(exit_code, 1)
 
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(False, "SKIPPED", {"warnings": ["warn"]}),
     )
     @patch("builtins.print")
@@ -780,9 +780,9 @@ except ImportError:
         exit_code = main(argv)
         self.assertEqual(exit_code, 1)
 
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "CHANGED", {"warnings": []}),
     )
     @patch("json.dump")
@@ -802,7 +802,7 @@ except ImportError:
         self.assertEqual(exit_code, 0)
         mock_json.assert_called()
 
-    @patch("replace_imports.git_is_clean", return_value=False)
+    @patch("import_surgeon.cli.git_is_clean", return_value=False)
     @patch("logging.Logger.error")
     def test_main_git_not_clean(self, mock_err, mock_clean):
         argv = [
@@ -817,7 +817,7 @@ except ImportError:
             str(self.temp_path),
         ]
         with patch(
-            "replace_imports.find_git_root", return_value=self.temp_path
+            "import_surgeon.cli.find_git_root", return_value=self.temp_path
         ):
             exit_code = main(argv)
             self.assertEqual(exit_code, 1)
@@ -825,7 +825,7 @@ except ImportError:
                 "Git not clean; commit/stash or remove --require-clean-git"
             )
 
-    @patch("replace_imports.load_config", return_value={"old-module": "old"})
+    @patch("import_surgeon.cli.load_config", return_value={"old-module": "old"})
     def test_main_config_override(self, mock_load):
         argv = [
             "--config",
@@ -837,7 +837,7 @@ except ImportError:
             str(self.temp_path),
         ]
         args = parse_args(argv)
-        config = replace_imports.load_config(args.config)
+        config = import_surgeon.cli.load_config(args.config)
         for k, v in config.items():
             key = k.replace("-", "_")
             if not hasattr(args, key) or getattr(args, key) is None:
@@ -845,7 +845,7 @@ except ImportError:
         self.assertEqual(args.old_module, "old")
 
     @patch(
-        "replace_imports.load_config",
+        "import_surgeon.cli.load_config",
         return_value={"old-module": "old", "new-module": "newer"},
     )
     def test_main_config_override_selective(self, mock_load):
@@ -859,7 +859,7 @@ except ImportError:
             str(self.temp_path),
         ]
         args = parse_args(argv)
-        config = replace_imports.load_config(args.config)
+        config = import_surgeon.cli.load_config(args.config)
         for k, v in config.items():
             key = k.replace("-", "_")
             if not hasattr(args, key) or getattr(args, key) is None:
@@ -881,9 +881,9 @@ except ImportError:
         mock_print.assert_not_called()
 
     # New test: Summary JSON content
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "CHANGED", {"warnings": [], "risk_level": "low"}),
     )
     @patch("json.dump")
@@ -912,13 +912,13 @@ except ImportError:
         self.assertEqual(entry["risk_level"], "low")
 
     # New test: Auto-commit failure
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "MODIFIED", {"warnings": []}),
     )
-    @patch("replace_imports.git_is_clean", return_value=True)
-    @patch("replace_imports.git_commit_changes", return_value=False)
+    @patch("import_surgeon.cli.git_is_clean", return_value=True)
+    @patch("import_surgeon.cli.git_commit_changes", return_value=False)
     @patch("builtins.print")
     @patch("logging.Logger.info")
     def test_main_auto_commit_failure(
@@ -937,7 +937,7 @@ except ImportError:
             str(self.temp_path),
         ]
         with patch(
-            "replace_imports.find_git_root", return_value=self.temp_path
+            "import_surgeon.cli.find_git_root", return_value=self.temp_path
         ):
             exit_code = main(argv)
             self.assertEqual(exit_code, 0)
@@ -949,15 +949,15 @@ except ImportError:
 
     # New test: Main with migrations in config
     @patch(
-        "replace_imports.load_config",
+        "import_surgeon.cli.load_config",
         return_value={
             "migrations": [
                 {"old_module": "old", "new_module": "new", "symbols": ["Sym"]}
             ]
         },
     )
-    @patch("replace_imports.find_py_files", return_value=[])
-    @patch("replace_imports.process_file")
+    @patch("import_surgeon.cli.find_py_files", return_value=[])
+    @patch("import_surgeon.cli.process_file")
     def test_main_with_migrations_config(self, mock_process, mock_find, mock_load):
         argv = ["--config", "config.yaml", str(self.temp_path)]
         exit_code = main(argv)
@@ -1003,10 +1003,10 @@ except ImportError:
             mock_warn.assert_called_with("Backup missing for %s", file_path)
 
     # New test: Auto base_package detection
-    @patch("replace_imports.find_py_files", return_value=[])
-    @patch("replace_imports.process_file")
+    @patch("import_surgeon.cli.find_py_files", return_value=[])
+    @patch("import_surgeon.cli.process_file")
     @patch(
-        "replace_imports.find_git_root", return_value=Path("/repo/myproject")
+        "import_surgeon.cli.find_git_root", return_value=Path("/repo/myproject")
     )
     @patch("logging.Logger.info")
     def test_main_auto_base_package(
@@ -1026,9 +1026,9 @@ except ImportError:
         mock_info.assert_any_call("Auto-detected base_package: %s", "myproject")
 
     # New test: Main with --rewrite-dotted
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "MODIFIED", {"warnings": []}),
     )
     def test_main_rewrite_dotted(self, mock_process, mock_find):
@@ -1049,9 +1049,9 @@ except ImportError:
         self.assertTrue(call_args[6])  # rewrite_dotted=True
 
     # New test: Main with --format
-    @patch("replace_imports.find_py_files", return_value=[Path("test.py")])
+    @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
     @patch(
-        "replace_imports.process_file",
+        "import_surgeon.cli.process_file",
         return_value=(True, "MODIFIED", {"warnings": []}),
     )
     def test_main_format(self, mock_process, mock_find):
@@ -1096,10 +1096,10 @@ except ImportError:
 
     # New test: Interrupted apply (partial failure during multi-file processing)
     @patch(
-        "replace_imports.find_py_files",
+        "import_surgeon.cli.find_py_files",
         return_value=[Path("good.py"), Path("bad.py")],
     )
-    @patch("replace_imports.process_file")
+    @patch("import_surgeon.cli.process_file")
     @patch("builtins.print")
     def test_main_partial_failure(self, mock_print, mock_process, mock_find):
         mock_process.side_effect = [

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""replace_imports.py
+"""import_surgeon.py
 
 Elite production-standard, peace-of-mind utility to move symbols' `from ... import X` bindings
 from one module to another across a Python repository.
@@ -22,13 +22,13 @@ Design goals / guarantees:
 
 Usage examples:
   # Dry-run with config including migrations
-  python replace_imports.py --config config.yaml
+  python import_surgeon.py --config config.yaml
 
   # Apply with formatting and dotted rewrite
-  python replace_imports.py --apply --format --rewrite-dotted --old-module old --new-module new --symbols Sym1,Sym2
+  python import_surgeon.py --apply --format --rewrite-dotted --old-module old --new-module new --symbols Sym1,Sym2
 
   # Rollback
-  python replace_imports.py --rollback --summary-json summary.json
+  python import_surgeon.py --rollback --summary-json summary.json
 
 Exit codes:
  0 - success
@@ -77,7 +77,7 @@ except ImportError:
     HAS_CHARDET = False
     UniversalDetector = None
 
-logger = logging.getLogger("replace_imports")
+logger = logging.getLogger("import_surgeon")
 
 
 # ----------------------------- Config helpers ---------------------------------
