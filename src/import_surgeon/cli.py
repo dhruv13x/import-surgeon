@@ -96,6 +96,9 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--rollback", action="store_true", help="rollback changes using summary-json"
     )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s 1.0.0", help="Show program's version number and exit"
+    )
     return parser.parse_args(argv)
 
 
