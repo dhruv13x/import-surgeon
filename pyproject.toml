@@ -2,12 +2,11 @@
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.dynamic]
-version = {attr = "import_surgeon.__version__"}
+
 
 [project]
 name = "import-surgeon"
-dynamic = ["version"]
+version = "1.0.0"
 description = "Precision import refactoring tool — rewrite, migrate, and sanitize Python imports project-wide with safety and accuracy."
 readme = "README.md"
 requires-python = ">=3.8"
