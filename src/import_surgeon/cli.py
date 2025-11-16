@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# src/import_surgeon/cli.py
+
 """import_surgeon.py
 
 Elite production-standard, peace-of-mind utility to move symbols' `from ... import X` bindings
@@ -52,6 +54,7 @@ from .modules.encoding import detect_encoding
 from .modules.file_ops import atomic_write, find_py_files
 from .modules.git_ops import find_git_root, git_commit_changes, git_is_clean
 from .modules.process import process_file
+from .banner import print_logo
 
 # Optional dependencies
 try:
@@ -103,6 +106,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    print_logo()
     args = parse_args(argv)
     config = load_config(args.config)
     for k, v in config.items():

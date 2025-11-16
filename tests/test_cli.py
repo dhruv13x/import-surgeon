@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# tests/test_cli.py
+
 import json
 import logging
 import tempfile
