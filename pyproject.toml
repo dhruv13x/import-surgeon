@@ -51,7 +51,8 @@ dependencies = [
   "pyyaml>=6.0",
   "regex>=2024.7",
   "black>=24.0",
-  "isort>=5.13"
+  "isort>=5.13",
+  "libcst>=1.0.0"
 ]
 
 [project.optional-dependencies]

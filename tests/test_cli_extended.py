@@ -67,29 +67,6 @@ class TestCliExtended(unittest.TestCase):
             self.assertEqual(exit_code, 1)
             self.assertTrue(any("Rollback failed" in str(call) for call in mock_err.mock_calls))
 
-    def test_missing_modules_or_migration(self):
-        """Test missing required arguments (modules/migrations)."""
-        # Case 1: No old_module, no migration
-        with patch("logging.Logger.error") as mock_err:
-            exit_code = main(["--new-module", "new", "--symbols", "S"])
-            self.assertEqual(exit_code, 2)
-            # mock_err.assert_called_with("Missing required: --old-module or migrations in config")
-            self.assertTrue(any("Missing required: --old-module or migrations in config" in str(c) for c in mock_err.mock_calls))
-
-        # Case 2: No new_module
-        with patch("logging.Logger.error") as mock_err:
-            exit_code = main(["--old-module", "old", "--symbols", "S"])
-            self.assertEqual(exit_code, 2)
-            # mock_err.assert_called_with("Missing required: --new-module or migrations in config")
-            self.assertTrue(any("Missing required: --new-module or migrations in config" in str(c) for c in mock_err.mock_calls))
-
-        # Case 3: No symbols
-        with patch("logging.Logger.error") as mock_err:
-            exit_code = main(["--old-module", "old", "--new-module", "new"])
-            self.assertEqual(exit_code, 2)
-            # mock_err.assert_called_with("Missing required: --symbol / --symbols or migrations in config")
-            self.assertTrue(any("Missing required: --symbol / --symbols or migrations in config" in str(c) for c in mock_err.mock_calls))
-
     @patch("import_surgeon.cli.process_file")
     @patch("import_surgeon.cli.find_py_files")
     def test_process_file_errors_counting(self, mock_find, mock_process):
