@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "import-surgeon"
-version = "2.0.0"
+version = "3.0.0"
 description = "Precision import refactoring tool — rewrite, migrate, and sanitize Python imports project-wide with safety and accuracy."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -80,7 +80,7 @@ python_version = "3.11"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-pythonpath = "src"
+pythonpath = ["src"]
 timeout = 10
 testpaths = ["tests"]
 addopts = [
@@ -88,10 +88,19 @@ addopts = [
   "--strict-config",
   "--strict-markers",
   "--tb=short",
-  "--cov",
-  "--cov-report=term-missing",
-  "--cov-report=html",
+  "--cov=src/import_surgeon",
+  "--cov-fail-under=95",
   "--cov-report=term-missing:skip-covered",
+  "--cov-report=html",
 ]
 log_cli = true
 log_cli_level = "INFO"
+
+[tool.coverage.run]
+branch = true
+source = ["src/import_surgeon"]
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = true
