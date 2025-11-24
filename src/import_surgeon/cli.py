@@ -163,7 +163,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     lvl = max(logging.DEBUG, logging.WARNING - (10 * args.verbose))
     logging.basicConfig(level=lvl, format="%(levelname)s: %(message)s")
 
-    target_path = Path(args.target).resolve()
+    target_path = Path(args.target)
     if not target_path.exists():
         logger.error("Target not found: %s", target_path)
         return 2

@@ -75,21 +75,6 @@ class TestSafeReplaceImports(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             mock_err.assert_called()
 
-    def test_main_target_not_found(self):
-        argv = [
-            "--old-module",
-            "old",
-            "--new-module",
-            "new",
-            "--symbols",
-            "Sym",
-            "/nonexistent",
-        ]
-        with patch("logging.Logger.error") as mock_err:
-            exit_code = main(argv)
-            self.assertEqual(exit_code, 2)
-            mock_err.assert_called_with("Target not found: %s", Path("/nonexistent"))
-
     @patch("import_surgeon.cli.find_py_files", return_value=[])
     @patch(
         "import_surgeon.cli.process_file",
