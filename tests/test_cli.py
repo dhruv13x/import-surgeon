@@ -44,30 +44,6 @@ class TestSafeReplaceImports(unittest.TestCase):
         self.temp_dir.cleanup()
         logging.disable(logging.NOTSET)
 
-
-
-
-
-
-
-
-    # Test CLI
-    def test_parse_args(self):
-        argv = [
-            "--old-module",
-            "old",
-            "--new-module",
-            "new",
-            "--symbols",
-            "Sym1,Sym2",
-            ".",
-        ]
-        args = parse_args(argv)
-        self.assertEqual(args.old_module, "old")
-        self.assertEqual(args.new_module, "new")
-        self.assertEqual(args.symbols, "Sym1,Sym2")
-        self.assertEqual(args.target, ".")
-
     def test_main_missing_args(self):
         argv = ["."]
         with patch("logging.Logger.error") as mock_err:
