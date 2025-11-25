@@ -90,11 +90,11 @@ Progress bar	tqdm fallback built-in
 
 pip install import-surgeon
 
-> Optional but recommended:
+> Optional but recommended for improved encoding detection:
 
 
 
-pip install black isort chardet tqdm
+pip install chardet
 
 
 ---
@@ -162,21 +162,34 @@ Refuses unsafe wildcard rewrites unless configured
 
 ---
 
-🧠 CLI Options (summary)
+🧠 CLI Options
 
-Flag	Meaning
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `target` | The target file or directory to scan. | `.` |
+| `--old-module` | The fully qualified module path to move symbols from. | **Required**¹ |
+| `--new-module` | The fully qualified module path to move symbols to. | **Required**¹ |
+| `--symbols` | A comma-separated list of symbols to move. | **Required**¹ |
+| `--apply` | Apply changes to files instead of showing a dry-run. | `False` |
+| `--config` | Path to a YAML file for batch migrations. | `None` |
+| `--rewrite-dotted` | Rewrite direct `module.symbol` usages in code. | `False` |
+| `--format` | Apply `black` and `isort` formatting after changes. | `False` |
+| `--rollback` | Roll back a previous migration using a summary file. | `False` |
+| `--summary-json` | Path to write a JSON summary of all changes. | `None` |
+| `--auto-commit` | Git commit message to auto-commit changes. | `None` |
+| `--require-clean-git` | Abort if the Git repository has uncommitted changes. | `False` |
+| `--no-backup` | Disable creation of `.bak` files for changed modules. | `False` |
+| `--base-package` | Specify the base package for resolving relative imports.| Auto-detected from Git root |
+| `--force-relative` | Force the use of relative imports where possible. | `False` |
+| `--exclude` | Comma-separated glob patterns to exclude from scan. | `None` |
+| `--max-files` | Maximum number of files to scan. | `10000` |
+| `--strict-warnings` | Exit with a non-zero code if any warnings occur. | `False` |
+| `--quiet` | Set the logging level (`none`, `errors`, `all`). | `none` |
+| `-v, --verbose` | Increase logging verbosity. | `0` (Warning) |
+| `--version` | Show the program's version number and exit. | N/A |
+| `--symbol` | Deprecated alias for `--symbols`. | `None` |
 
---old-module	Old module to move from
---new-module	New module to move to
---symbols	Comma-separated symbol list
---apply	Actually write changes
---no-backup	Skip file backups
---config FILE	YAML batch config
---rollback	Rollback via summary JSON
---rewrite-dotted	Rewrite dotted uses too
---format	Run isort + black
---auto-commit	Auto-commit in git repo
---require-clean-git	Ensure repo clean before write
+¹ Required if not using a `--config` file.
 
 
 
@@ -194,10 +207,26 @@ Code	Meaning
 
 ---
 
-📁 Project Structure
+🏗️ Architecture
 
+The core logic resides in the `src/import_surgeon/` directory.
+
+```
 src/import_surgeon/
-  cli.py
+├── cli.py             # Main CLI entry point and argument parsing
+├── banner.py          # ASCII art banner
+└── modules/           # Core logic modules
+    ├── __init__.py
+    ├── analysis.py    # AST analysis and symbol detection
+    ├── config.py      # YAML configuration loading
+    ├── cst_utils.py   # LibCST helper functions
+    ├── encoding.py    # File encoding detection
+    ├── file_ops.py    # File read/write operations
+    ├── git_ops.py     # Git repository interactions
+    └── process.py     # Main file processing and orchestration
+```
+
+The tool works by parsing Python files into an Abstract Syntax Tree (AST) using `LibCST`, identifying import statements, and then surgically replacing them based on the migration rules. It ensures safety through backups, atomic writes, and optional Git integration.
 
 
 ---
