@@ -98,6 +98,7 @@ import-surgeon --apply --rewrite-dotted \
 
 *   **Accurate import rewrites**: LibCST powered symbol movement (AST-exact).
 *   **Dotted name rewrites**: `old.module.Foo` → `new.module.Foo` if `--rewrite-dotted`.
+*   **Advanced Alias Handling**: Updates usages like `import old.pkg as o; o.Symbol()` → `new.pkg.Symbol()`.
 *   **Atomic file updates**: Guaranteed atomic writes + metadata restore.
 *   **Auto backup & rollback**: `--no-backup` optional; `--rollback` supported.
 *   **Supports aliases**: `from A import Foo as Bar` handled correctly.

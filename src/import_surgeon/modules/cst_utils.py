@@ -296,6 +296,22 @@ class DottedReplacer(BaseReplacer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.rewrote_count = 0
+        self.aliases: Dict[str, str] = {}  # alias -> original_module_name
+
+    def visit_Import(self, node: cst.Import) -> Optional[bool]:
+        for alias in node.names:
+            mod_name = _module_to_str(alias.name)
+            if self._match_module(mod_name):
+                # Found an import of the old module
+                if alias.asname and isinstance(alias.asname.name, cst.Name):
+                    # import old.pkg as o
+                    alias_name = alias.asname.name.value
+                    self.aliases[alias_name] = mod_name
+                else:
+                    # import old.pkg
+                    # alias is old.pkg
+                    self.aliases[mod_name] = mod_name
+        return True
 
     def leave_Attribute(
         self, original_node: cst.Attribute, updated_node: cst.Attribute
@@ -305,7 +321,15 @@ class DottedReplacer(BaseReplacer):
             and updated_node.attr.value in self.symbols
         ):
             mod_str = _attr_to_dotted(updated_node.value)
-            if mod_str and self._match_module(mod_str):
+
+            matched = False
+            if mod_str:
+                if self._match_module(mod_str):
+                    matched = True
+                elif mod_str in self.aliases:
+                    matched = True
+
+            if matched:
                 new_value = _str_to_expr(self.new_module)
                 self.rewrote_count += 1
                 pos = self.get_metadata(md.PositionProvider, original_node)
