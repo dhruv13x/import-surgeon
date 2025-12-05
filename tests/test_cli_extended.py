@@ -44,9 +44,14 @@ class TestCliExtended(unittest.TestCase):
              importlib.reload(import_surgeon.cli)
 
              # Check if tqdm is the dummy function
-             # The dummy function returns the iterable
+             # The dummy function is a class instance that iterates over the iterable
              iterable = [1, 2, 3]
-             self.assertEqual(import_surgeon.cli.tqdm(iterable), iterable)
+             dummy_tqdm = import_surgeon.cli.tqdm(iterable)
+             self.assertEqual(list(dummy_tqdm), iterable)
+
+             # Also verify it works as context manager
+             with dummy_tqdm as pbar:
+                 self.assertEqual(pbar, dummy_tqdm)
 
              # Restore
              importlib.reload(import_surgeon.cli)

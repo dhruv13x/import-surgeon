@@ -42,8 +42,11 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
+import functools
 import json
 import logging
+import multiprocessing
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,8 +64,30 @@ try:
     from tqdm import tqdm  # Progress bar
 except ImportError:
 
-    def tqdm(iterable, **kwargs):
-        return iterable
+    class DummyTqdm:
+        def __init__(self, iterable=None, **kwargs):
+            self.iterable = iterable
+
+        def __iter__(self):
+            return iter(self.iterable or [])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def update(self, n=1):
+            pass
+
+        def set_description(self, desc):
+            pass
+
+        def write(self, msg):
+            print(msg)
+
+    def tqdm(iterable=None, **kwargs):
+        return DummyTqdm(iterable, **kwargs)
 
 
 logger = logging.getLogger("import_surgeon")
@@ -98,6 +123,13 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--rollback", action="store_true", help="rollback changes using summary-json"
+    )
+    parser.add_argument(
+        "--jobs",
+        "-j",
+        type=int,
+        default=1,
+        help="number of parallel jobs (default: 1)",
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s 3.0.2", help="Show program's version number and exit"
@@ -189,33 +221,76 @@ def main(argv: Optional[List[str]] = None) -> int:
     summary: List[Dict] = []
     dry_run = not args.apply
 
-    progress_iter = tqdm(py_files, disable=(args.quiet != "none"))
-    for p in progress_iter:
-        progress_iter.set_description(f"Processing {p.name}")
-        changed_flag, msg, detail = process_file(
-            p,
-            migrations,
-            dry_run,
-            args.no_backup,
-            args.force_relative,
-            args.base_package,
-            args.rewrite_dotted if hasattr(args, "rewrite_dotted") else False,
-            args.format if hasattr(args, "format") else False,
-            args.quiet,
-        )
-        should_print = args.quiet == "none" or (
-            args.quiet == "errors" and "ERROR" in msg
-        )
-        if should_print:
-            print(msg)
-        if "SKIPPED" in msg or detail["warnings"]:
-            warnings += 1
-        if changed_flag and not dry_run:
-            changed += 1
-        if "ERROR" in msg:
-            errors += 1
-        entry = {"file": str(p), "changed": changed_flag, "message": msg, **detail}
-        summary.append(entry)
+    worker_func = functools.partial(
+        process_file,
+        migrations=migrations,
+        dry_run=dry_run,
+        no_backup=args.no_backup,
+        force_relative=args.force_relative,
+        base_package=args.base_package,
+        rewrite_dotted=args.rewrite_dotted if hasattr(args, "rewrite_dotted") else False,
+        do_format=args.format if hasattr(args, "format") else False,
+        quiet=args.quiet,
+    )
+
+    if args.jobs > 1:
+        cpu_count = multiprocessing.cpu_count()
+        max_workers = min(args.jobs, cpu_count * 2)  # Cap reasonable max
+        logger.info("Starting parallel processing with %d workers", max_workers)
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # We map futures to file paths to track progress
+            futures = {executor.submit(worker_func, p): p for p in py_files}
+
+            with tqdm(total=len(py_files), disable=(args.quiet != "none")) as pbar:
+                for future in concurrent.futures.as_completed(futures):
+                    p = futures[future]
+                    pbar.set_description(f"Processing {p.name}")
+                    try:
+                        changed_flag, msg, detail = future.result()
+
+                        should_print = args.quiet == "none" or (
+                            args.quiet == "errors" and "ERROR" in msg
+                        )
+                        if should_print:
+                            # Using tqdm.write to avoid interfering with progress bar
+                            pbar.write(msg)
+
+                        if "SKIPPED" in msg or detail["warnings"]:
+                            warnings += 1
+                        if changed_flag and not dry_run:
+                            changed += 1
+                        if "ERROR" in msg:
+                            errors += 1
+                        entry = {"file": str(p), "changed": changed_flag, "message": msg, **detail}
+                        summary.append(entry)
+                    except Exception as exc:
+                        logger.error("Generated an exception: %s", exc)
+                        errors += 1
+                    pbar.update(1)
+
+    else:
+        progress_iter = tqdm(py_files, disable=(args.quiet != "none"))
+        for p in progress_iter:
+            progress_iter.set_description(f"Processing {p.name}")
+            # Note: worker_func needs keyword arg 'file_path' which corresponds to the first arg of process_file
+            # process_file(file_path, ...)
+            # worker_func is partial(process_file, ...) so we just pass p
+            changed_flag, msg, detail = worker_func(p)
+
+            should_print = args.quiet == "none" or (
+                args.quiet == "errors" and "ERROR" in msg
+            )
+            if should_print:
+                print(msg)
+            if "SKIPPED" in msg or detail["warnings"]:
+                warnings += 1
+            if changed_flag and not dry_run:
+                changed += 1
+            if "ERROR" in msg:
+                errors += 1
+            entry = {"file": str(p), "changed": changed_flag, "message": msg, **detail}
+            summary.append(entry)
 
     if args.summary_json:
         with open(args.summary_json, "w", encoding="utf-8") as f:
