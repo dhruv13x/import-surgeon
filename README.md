@@ -26,143 +26,114 @@
 <!-- License -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<!-- Docs -->
-[![Docs](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://your-docs-link)
-
 </div>
 
+---
+
+# import-surgeon 🩺⚙️
+
+**Precision Python import refactoring — safe, atomic, AST-exact, rollback-friendly.**
 
 ---
 
-import-surgeon 🩺⚙️
+## 🧠 Overview
 
-Precision Python import refactoring — safe, atomic, AST-exact, rollback-friendly.
+`import-surgeon` is an **Elite import refactoring engine** for Python codebases.
 
----
+It precisely updates imports and moves symbols across modules without breaking your code, using full **LibCST AST guarantees**, backup files, atomic writes, and optional auto-formatting.
 
-🧠 Overview
+> **Think of it as:**
+> `libcst` + `git-protection` + `atomic rollback-safe refactor surgery`
 
-import-surgeon is an Elite import refactoring engine for Python codebases.
-
-It precisely updates imports and moves symbols across modules without breaking your code, using full LibCST AST guarantees, backup files, atomic writes, and optional auto-formatting.
-
-> Think of it as
-libcst + git-protection + atomic rollback-safe refactor surgery
-
-
-
-Use it for:
-
-✅ Package restructures
-✅ Module renames
-✅ Moving functions/classes between files
-✅ Gradual API migrations
-✅ Org-wide import cleanup
-✅ CI-safe automated refactors
+### Use it for:
+*   ✅ **Package restructures**
+*   ✅ **Module renames**
+*   ✅ **Moving functions/classes between files**
+*   ✅ **Gradual API migrations**
+*   ✅ **Org-wide import cleanup**
+*   ✅ **CI-safe automated refactors**
 
 No regex. No AST guessing. No broken imports.
 
-
 ---
 
-✨ Features
+## 🚀 Quick Start
 
-Capability	Description
+### Prerequisites
+*   Python 3.8+
+*   Powered by `libcst`, `rich`, `tqdm`, `pyyaml`, `regex`, `black`, `isort`.
 
-Accurate import rewrites	LibCST powered symbol movement (AST-exact)
-Dotted name rewrites	old.module.Foo → new.module.Foo if --rewrite-dotted
-Atomic file updates	Guaranteed atomic writes + metadata restore
-Auto backup & rollback	--no-backup optional; --rollback supported
-Supports aliases	from A import Foo as Bar handled correctly
-Respects relative imports	--force-relative + auto base-package detection
-Batch migrations	YAML config for multi-module migrations
-Safe in CI	--require-clean-git to prevent dirty changes
-Git auto-commit	--auto-commit "msg"
-Optional format	Black + isort applied after changes
-Warnings for risky spots	Wildcards, dotted patterns, skipped rel imports
-Progress bar	tqdm fallback built-in
+### Installation
 
-
-
----
-
-📦 Installation
-
+```bash
 pip install import-surgeon
+```
 
-> Optional but recommended for improved encoding detection:
+> **Optional:** For improved encoding detection:
+> ```bash
+> pip install chardet
+> ```
 
+### Usage Example
 
-
-pip install chardet
-
-
----
-
-🛠 Usage
-
-Basic dry-run (default)
-
+**1. Basic dry-run (default)**
+```bash
 import-surgeon --old-module utils --new-module core.utils --symbols load,save
+```
 
-Apply changes
-
+**2. Apply changes**
+```bash
 import-surgeon --old-module old.pkg --new-module new.pkg --symbols Foo,Bar --apply
+```
 
-Rewrite dotted usages too
-
+**3. Rewrite dotted usages too**
+```bash
 import-surgeon --apply --rewrite-dotted \
   --old-module old.mod --new-module new.mod --symbols Client
+```
 
-Use YAML migrations file
+---
 
-migrate.yml
+## ✨ Key Features
 
+*   **Accurate import rewrites**: LibCST powered symbol movement (AST-exact).
+*   **Dotted name rewrites**: `old.module.Foo` → `new.module.Foo` if `--rewrite-dotted`.
+*   **Atomic file updates**: Guaranteed atomic writes + metadata restore.
+*   **Auto backup & rollback**: `--no-backup` optional; `--rollback` supported.
+*   **Supports aliases**: `from A import Foo as Bar` handled correctly.
+*   **Respects relative imports**: `--force-relative` + auto `base-package` detection.
+*   **Batch migrations**: YAML config for multi-module migrations.
+*   **Safe in CI**: `--require-clean-git` to prevent dirty changes.
+*   **Git auto-commit**: `--auto-commit "msg"`.
+*   **Optional format**: `black` + `isort` applied after changes (`--format`).
+*   **Warnings for risky spots**: Wildcards, dotted patterns, skipped relative imports.
+*   **Progress bar**: `tqdm` fallback built-in.
+
+---
+
+## ⚙️ Configuration & Advanced Usage
+
+### YAML Migration File (`migrate.yml`)
+
+```yaml
 migrations:
   - old_module: old.auth
     new_module: services.auth
     symbols: [User, Token]
+```
 
-Run:
-
+Run with config:
+```bash
 import-surgeon --config migrate.yml --apply
+```
 
-Rollback a refactor
+### Rollback a Refactor
 
+```bash
 import-surgeon --rollback --summary-json summary.json
+```
 
-
----
-
-🧪 Example Output
-
-✔️ New imports inserted
-✔️ Old imports removed
-✔️ Diff preview in dry-run
-✔️ JSON report with file list, change lines & risks
-
-
----
-
-🔒 Safety Guarantees
-
-Dry run by default
-
-File backups by default
-
-Atomic writes (no corruption)
-
-Git-clean check option
-
-Per-file encoding detection
-
-Refuses unsafe wildcard rewrites unless configured
-
-
-
----
-
-🧠 CLI Options
+### CLI Arguments
 
 | Flag | Description | Default |
 | :--- | :--- | :--- |
@@ -179,35 +150,27 @@ Refuses unsafe wildcard rewrites unless configured
 | `--auto-commit` | Git commit message to auto-commit changes. | `None` |
 | `--require-clean-git` | Abort if the Git repository has uncommitted changes. | `False` |
 | `--no-backup` | Disable creation of `.bak` files for changed modules. | `False` |
-| `--base-package` | Specify the base package for resolving relative imports.| Auto-detected from Git root |
+| `--base-package` | Specify the base package for resolving relative imports. | Auto-detected |
 | `--force-relative` | Force the use of relative imports where possible. | `False` |
 | `--exclude` | Comma-separated glob patterns to exclude from scan. | `None` |
 | `--max-files` | Maximum number of files to scan. | `10000` |
 | `--strict-warnings` | Exit with a non-zero code if any warnings occur. | `False` |
 | `--quiet` | Set the logging level (`none`, `errors`, `all`). | `none` |
-| `-v, --verbose` | Increase logging verbosity. | `0` (Warning) |
+| `-v, --verbose` | Increase logging verbosity. | `0` |
 | `--version` | Show the program's version number and exit. | N/A |
-| `--symbol` | Deprecated alias for `--symbols`. | `None` |
+| `--symbol` | **Deprecated** alias for `--symbols`. | `None` |
 
 ¹ Required if not using a `--config` file.
 
+### Exit Codes
 
-
----
-
-🚦 Exit Codes
-
-Code	Meaning
-
-0	Success
-1	Changes had errors
-2	CLI/config error
-
-
+*   `0`: Success
+*   `1`: Changes had errors
+*   `2`: CLI/config error
 
 ---
 
-🏗️ Architecture
+## 🏗️ Architecture
 
 The core logic resides in the `src/import_surgeon/` directory.
 
@@ -228,61 +191,50 @@ src/import_surgeon/
 
 The tool works by parsing Python files into an Abstract Syntax Tree (AST) using `LibCST`, identifying import statements, and then surgically replacing them based on the migration rules. It ensures safety through backups, atomic writes, and optional Git integration.
 
+---
+
+## 🗺️ Roadmap
+
+### Phase 1: Foundation (Current)
+*   ✅ AST-Based Refactoring
+*   ✅ Robust CLI & Configuration Files
+*   ✅ File Backups & Git Integration
+
+### Phase 2: The Standard
+*   Interactive TUI for selecting symbols.
+*   Symbol Dependency Analysis warning system.
+*   Broader Python Version Support.
+
+### Phase 3: The Ecosystem
+*   IDE Integration (VSCode / PyCharm plugins).
+*   Pre-Commit Hook automation.
+*   Public API for programmatic use.
+
+### Phase 4: The Vision
+*   AI-Powered Refactoring Suggestions.
+*   Automated Code Modernization.
+*   Cross-Language Support.
 
 ---
 
-🧩 Roadmap
+## 🤝 Contributing & License
 
-Symbol dependency graph warnings
+**PRs welcome!** We are looking for help with:
+*   Editor plugins
+*   Safety analyzers
+*   Batch migration assistants
 
-VSCode / PyCharm integration
-
-Preview UI with selectable edits
-
-Interactive TUI surgeon console
-
-NeoVim LSP hooks
-
-
+**License**: [MIT](https://opensource.org/licenses/MIT) — commercial and open use welcome.
 
 ---
 
-🤝 Contributing
-
-PRs welcome, especially for:
-
-Editor plugins
-
-Safety analyzers
-
-Batch migration assistants
-
-Code mod multi-tool integration
-
-
-
----
-
-📜 License
-
-MIT — commercial and open use welcome.
-
-
----
-
-⭐ Support
+## ⭐ Support
 
 Star the repo — every ⭐ funds more time for DevTools research 🙏
 
-https://github.com/dhruv13x/import-surgeon
-
-
----
-
-> 🩺 Your imports deserve precision surgery — not blind search-replace.
-Run import-surgeon and refactor with confidence.
-
-
-
+[https://github.com/dhruv13x/import-surgeon](https://github.com/dhruv13x/import-surgeon)
 
 ---
+
+> 🩺 **Your imports deserve precision surgery — not blind search-replace.**
+> **Run `import-surgeon` and refactor with confidence.**
