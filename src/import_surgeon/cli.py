@@ -50,10 +50,10 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .modules.config import load_config
-from .modules.encoding import detect_encoding
-from .modules.file_ops import atomic_write, find_py_files
+from .modules.file_ops import find_py_files
 from .modules.git_ops import find_git_root, git_commit_changes, git_is_clean
 from .modules.process import process_file
+from .modules.rollback import perform_rollback
 from .banner import print_logo
 
 # Optional dependencies
@@ -115,32 +115,10 @@ def main(argv: Optional[List[str]] = None) -> int:
             setattr(args, key, v)
 
     if args.rollback:
-        if not args.summary_json:
-            logger.error("Missing --summary-json for rollback")
-            return 2
-        try:
-            with open(args.summary_json, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for entry in data["summary"]:
-                if entry.get("changed") and entry.get("backup"):
-                    bkp = Path(entry["backup"])
-                    file = Path(entry["file"])
-                    if bkp.exists():
-                        encoding = (
-                            detect_encoding(file)
-                            if file.exists()
-                            else detect_encoding(bkp)
-                        )
-                        atomic_write(file, bkp.read_text(encoding), encoding)
-                        os.remove(bkp)
-                        logger.info("Restored %s from %s", file, bkp)
-                    else:
-                        logger.warning("Backup missing for %s", file)
-            logger.info("Rollback completed")
+        if perform_rollback(args.summary_json):
             return 0
-        except Exception as e:
-            logger.error("Rollback failed: %s", e)
-            return 1
+        else:
+            return 2 if not args.summary_json else 1
 
     if not (hasattr(args, "old_module") and args.old_module) and not config.get(
         "migrations"

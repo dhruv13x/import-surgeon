@@ -101,8 +101,8 @@ class TestCliExtended(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             mock_err.assert_called_with("Missing required: --new-module or migrations in config")
 
-    @patch("import_surgeon.cli.detect_encoding")
-    @patch("import_surgeon.cli.atomic_write")
+    @patch("import_surgeon.modules.rollback.detect_encoding")
+    @patch("import_surgeon.modules.rollback.atomic_write")
     @patch("os.remove")
     def test_main_rollback_original_file_missing(self, mock_os_remove, mock_atomic_write, mock_detect_encoding):
         """Test rollback when original file is missing but backup exists."""
