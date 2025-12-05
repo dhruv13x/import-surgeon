@@ -394,8 +394,18 @@ class TestSafeReplaceImports(unittest.TestCase):
         exit_code = main(argv)
         self.assertEqual(exit_code, 0)
         mock_process.assert_called_once()
-        call_args = mock_process.call_args[0]
-        self.assertTrue(call_args[6])  # rewrite_dotted=True
+        # With partial used in cli.py, arguments might be positional or kwargs depending on how partial was created
+        # But we pass rewrite_dotted as kwarg to partial.
+        # Check call_args.kwargs
+        call_kwargs = mock_process.call_args.kwargs
+        if "rewrite_dotted" in call_kwargs:
+            self.assertTrue(call_kwargs["rewrite_dotted"])
+        else:
+             # Fallback if somehow passed positionally (though partial passes kwargs as kwargs usually)
+             # signature: process_file(file_path, migrations, dry_run, no_backup, force_relative, base_package, rewrite_dotted, ...)
+             # rewrite_dotted is index 6
+             call_args = mock_process.call_args[0]
+             self.assertTrue(call_args[6])
 
     # New test: Main with --format
     @patch("import_surgeon.cli.find_py_files", return_value=[Path("test.py")])
@@ -417,8 +427,12 @@ class TestSafeReplaceImports(unittest.TestCase):
         exit_code = main(argv)
         self.assertEqual(exit_code, 0)
         mock_process.assert_called_once()
-        call_args = mock_process.call_args[0]
-        self.assertTrue(call_args[7])  # do_format=True
+        call_kwargs = mock_process.call_args.kwargs
+        if "do_format" in call_kwargs:
+            self.assertTrue(call_kwargs["do_format"])
+        else:
+             call_args = mock_process.call_args[0]
+             self.assertTrue(call_args[7])  # do_format=True
 
     # New test: Rollback with non-UTF8 encoding
     def test_main_rollback_non_utf8(self):

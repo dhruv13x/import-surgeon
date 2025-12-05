@@ -108,6 +108,7 @@ import-surgeon --apply --rewrite-dotted \
 *   **Optional format**: `black` + `isort` applied after changes (`--format`).
 *   **Warnings for risky spots**: Wildcards, dotted patterns, skipped relative imports.
 *   **Progress bar**: `tqdm` fallback built-in.
+*   **Parallel Processing**: Multiprocessing support via `--jobs N`.
 
 ---
 
@@ -158,6 +159,7 @@ import-surgeon --rollback --summary-json summary.json
 | `--quiet` | Set the logging level (`none`, `errors`, `all`). | `none` |
 | `-v, --verbose` | Increase logging verbosity. | `0` |
 | `--version` | Show the program's version number and exit. | N/A |
+| `--jobs`, `-j` | Number of parallel jobs for processing files. | `1` |
 | `--symbol` | **Deprecated** alias for `--symbols`. | `None` |
 
 ¹ Required if not using a `--config` file.
