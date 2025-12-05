@@ -4,57 +4,65 @@ This document outlines the strategic vision for `import-surgeon`, categorized in
 
 ---
 
-## Phase 1: Foundation (Q1 2026)
+## Phase 1: Foundation (CRITICALLY MUST HAVE)
 
 **Focus**: Core functionality, stability, security, and basic usage.
+**Status**: Q1 2026
 
-- [x] **AST-Based Refactoring**: Core engine for safe, syntax-aware import refactoring.
-- [x] **Command-Line Interface**: Robust CLI for performing refactoring operations.
-- [x] **Configuration Files**: Support for YAML-based configuration for batch processing.
-- [x] **File Backups**: Automatic backups of modified files to prevent data loss.
-- [x] **Git Integration**: Options to ensure a clean working directory and to auto-commit changes.
-- [x] **Enhanced Error Handling**: More granular error messages and suggestions for common issues.
-- [ ] **Improved Performance**: Optimize file scanning and processing for large codebases.
+- [x] **AST-Based Refactoring Engine**: Core `LibCST` logic for safe, syntax-aware refactoring.
+- [x] **Robust CLI**: Argument parsing, logging, and granular verbosity controls.
+- [x] **YAML Configuration**: Support for batch migrations via `migrate.yml`.
+- [x] **Safety First**: Automatic file backups (`.bak`) and atomic write operations.
+- [x] **Git Integration**: Clean repo checks (`--require-clean-git`) and auto-commit.
+- [x] **Rollback Capability**: Restore files to previous state using `--rollback`.
+- [x] **Code Formatting**: Integration with `black` and `isort` (`--format`).
+- [ ] **Parallel Processing**: Multiprocessing support to speed up scanning on large monorepos.
+- [ ] **Advanced Alias Handling**: Support for refactoring symbols accessed via module aliases (e.g., `import old.pkg as o; o.Symbol()`).
 
 ---
 
-## Phase 2: The Standard (Q2 2026)
+## Phase 2: The Standard (MUST HAVE)
 
 **Focus**: Feature parity with top competitors, user experience improvements, and robust error handling.
+**Status**: Q2 2026
 
-- [ ] **Interactive Mode**: An interactive TUI for selecting symbols and previewing changes.
-- [ ] **Symbol Dependency Analysis**: Warn users when moving a symbol that other symbols depend on.
-- [ ] **Dry-Run Enhancements**: An improved dry-run mode with more detailed output and a clearer diff format.
-- [ ] **Broader Python Version Support**: Ensure compatibility with the latest Python versions.
+- [ ] **Interactive TUI**: A `rich`-powered interactive mode for selecting symbols and previewing changes before applying.
+- [ ] **Symbol Dependency Analysis**: Analyze and warn if moving a symbol will break internal dependencies in the old module.
+- [ ] **Enhanced Dry-Run**: Side-by-side rich diffs to visualize changes more clearly than unified diffs.
+- [ ] **"Unused Import" Cleanup**: Detect and surgically remove unused imports left behind after moving symbols.
+- [ ] **Advanced Pattern Matching**: Support regex or glob patterns for selecting symbols to move (e.g., `User*`).
 
 ---
 
-## Phase 3: The Ecosystem (Q3 2026)
+## Phase 3: The Ecosystem (INTEGRATION & SHOULD HAVE)
 
 **Focus**: Webhooks, API exposure, 3rd party plugins, SDK generation, and extensibility.
+**Status**: Q3 2026
 
-- [ ] **IDE Integration**: Plugins for VSCode and PyCharm to run `import-surgeon` from within the editor.
-- [ ] **Pre-Commit Hook**: A pre-commit hook to automate import refactoring during development.
-- [ ] **Public API**: Expose a public API to allow other tools to programmatically use `import-surgeon`.
-- [ ] **Plugin Architecture**: A plugin system to allow for custom refactoring rules and integrations.
+- [ ] **Public Python API**: stable `import import_surgeon` interface for use in other Python scripts.
+- [ ] **Pre-Commit Hook**: Official `.pre-commit-hooks.yaml` for automated cleanup in CI/CD.
+- [ ] **IDE Integration**: VSCode and PyCharm extensions wrapping the CLI for "Right-click -> Move Symbol".
+- [ ] **GitHub Action**: A marketplace action to automatically propose refactors on PRs.
+- [ ] **Plugin System**: Architecture for custom `Visitor`/`Transformer` plugins to handle framework-specific patterns (e.g., Django models).
 
 ---
 
-## Phase 4: The Vision (Q4 2026)
+## Phase 4: The Vision (GOD LEVEL)
 
 **Focus**: "Futuristic" features, AI integration, advanced automation, and industry-disrupting capabilities.
+**Status**: Q4 2026
 
-- [ ] **AI-Powered Suggestions**: Use AI to suggest refactoring opportunities and to predict potential issues.
-- [ ] **Automated Code Modernization**: Automatically update code to use new language features and best practices.
-- [ ] **Cross-Language Support**: Extend `import-surgeon` to support other languages, such as JavaScript or Go.
-- [ ] **Integration with Static Analysis Tools**: Integrate with tools like SonarQube to provide a more holistic view of code quality.
+- [ ] **AI-Driven Refactoring Advisor**: LLM integration to analyze code and suggest architectural improvements (e.g., "Move these 3 coupled classes to `services.py`").
+- [ ] **"Self-Healing" Imports**: A mode that runs on `ImportError` tracebacks to automatically find and fix the missing import.
+- [ ] **Architectural Enforcement**: Define "layers" (e.g., `api` -> `services` -> `db`) and forbid imports that violate the hierarchy.
+- [ ] **Dependency Graph Visualization**: Generate interactive Mermaid/Dot graphs showing the before/after import structure.
 
 ---
 
-## The Sandbox (Ongoing)
+## The Sandbox (OUT OF THE BOX / OPTIONAL)
 
 **Focus**: Wild, creative, experimental ideas that set the project apart.
 
-- [ ] **Visual Refactoring**: A graphical interface for visualizing code dependencies and for performing drag-and-drop refactoring.
-- [ ] **Gamification**: A system of achievements and rewards for improving code quality.
-- [ ] **Code Archaeology**: Tools for analyzing the history of a codebase to identify refactoring opportunities.
+- [ ] **"Time Travel" Refactoring**: Replay git history and apply a refactor to past commits to clean up history.
+- [ ] **Gamification**: Leaderboards for "Lines of Code Cleaned" or "Spaghetti Entanglements Removed".
+- [ ] **Code Archaeology**: Heatmaps showing which files are most frequently refactored, indicating tech debt hotspots.
