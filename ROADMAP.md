@@ -13,7 +13,7 @@ This document outlines the strategic vision for `import-surgeon`, categorized in
 - [x] **Configuration Files**: Support for YAML-based configuration for batch processing.
 - [x] **File Backups**: Automatic backups of modified files to prevent data loss.
 - [x] **Git Integration**: Options to ensure a clean working directory and to auto-commit changes.
-- [ ] **Enhanced Error Handling**: More granular error messages and suggestions for common issues.
+- [x] **Enhanced Error Handling**: More granular error messages and suggestions for common issues.
 - [ ] **Improved Performance**: Optimize file scanning and processing for large codebases.
 
 ---

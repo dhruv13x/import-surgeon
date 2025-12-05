@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Tuple
 
 import libcst as cst
 import libcst.metadata as md
+from libcst import ParserSyntaxError
 
 from .analysis import check_remaining_usages
 from .cst_utils import DottedReplacer, ImportReplacer
@@ -138,6 +139,20 @@ def process_file(
             if skipped_relative:
                 return False, f"SKIPPED (relative): {file_path}", detail
         return False, f"UNCHANGED: {file_path}", detail
+    except ParserSyntaxError as e:
+        detail["warnings"].append(f"Syntax Error: {e}")
+        msg = (
+            f"ERROR: {file_path}: {e}\n"
+            "Suggestion: The file contains invalid Python syntax. Please fix the syntax errors before processing."
+        )
+        return False, msg, detail
+    except UnicodeDecodeError as e:
+        detail["warnings"].append(f"Encoding Error: {e}")
+        msg = (
+            f"ERROR: {file_path}: {e}\n"
+            "Suggestion: The file encoding could not be detected or is invalid. Please check the file encoding."
+        )
+        return False, msg, detail
     except Exception as e:
         tb = traceback.format_exc()
         logger.error("Error in %s: %s\n%s", file_path, e, tb)
