@@ -76,31 +76,32 @@ pip install import-surgeon
 
 ### Usage Example
 
-**1. Basic dry-run (default)**
+**1. Interactive Wizard (New!)**
+```bash
+import-surgeon --interactive
+```
+
+**2. Basic dry-run (default)**
 ```bash
 import-surgeon --old-module utils --new-module core.utils --symbols load,save
 ```
 
-**2. Apply changes**
+**3. Apply changes with Parallel Processing**
 ```bash
-import-surgeon --old-module old.pkg --new-module new.pkg --symbols Foo,Bar --apply
-```
-
-**3. Rewrite dotted usages too**
-```bash
-import-surgeon --apply --rewrite-dotted \
-  --old-module old.mod --new-module new.mod --symbols Client
+import-surgeon --old-module old.pkg --new-module new.pkg --symbols Foo,Bar --apply --jobs 4
 ```
 
 ---
 
 ## ✨ Key Features
 
-*   **Accurate import rewrites**: LibCST powered symbol movement (AST-exact).
+*   **Accurate import rewrites**: LibCST powered symbol movement (**AST-exact**).
+*   **Interactive TUI**: Easy-to-use wizard for configuring migrations (`--interactive`).
+*   **Parallel Processing**: Blazing fast refactors on large codebases using multiprocessing (`--jobs`).
 *   **Dotted name rewrites**: `old.module.Foo` → `new.module.Foo` if `--rewrite-dotted`.
 *   **Advanced Alias Handling**: Updates usages like `import old.pkg as o; o.Symbol()` → `new.pkg.Symbol()`.
-*   **Atomic file updates**: Guaranteed atomic writes + metadata restore.
-*   **Auto backup & rollback**: `--no-backup` optional; `--rollback` supported.
+*   **Atomic file updates**: **Guaranteed atomic writes** + metadata restore.
+*   **Auto backup & rollback**: `--no-backup` optional; **Atomic rollback** supported.
 *   **Supports aliases**: `from A import Foo as Bar` handled correctly.
 *   **Respects relative imports**: `--force-relative` + auto `base-package` detection.
 *   **Batch migrations**: YAML config for multi-module migrations.
@@ -108,8 +109,7 @@ import-surgeon --apply --rewrite-dotted \
 *   **Git auto-commit**: `--auto-commit "msg"`.
 *   **Optional format**: `black` + `isort` applied after changes (`--format`).
 *   **Warnings for risky spots**: Wildcards, dotted patterns, skipped relative imports.
-*   **Progress bar**: `tqdm` fallback built-in.
-*   **Parallel Processing**: Multiprocessing support via `--jobs N`.
+*   **Symbol Dependency Analysis**: Warns if moving a symbol might break internal dependencies.
 
 ---
 
@@ -140,11 +140,13 @@ import-surgeon --rollback --summary-json summary.json
 | Flag | Description | Default |
 | :--- | :--- | :--- |
 | `target` | The target file or directory to scan. | `.` |
+| `--interactive`, `-i` | Launch interactive TUI wizard. | `False` |
 | `--old-module` | The fully qualified module path to move symbols from. | **Required**¹ |
 | `--new-module` | The fully qualified module path to move symbols to. | **Required**¹ |
 | `--symbols` | A comma-separated list of symbols to move. | **Required**¹ |
 | `--apply` | Apply changes to files instead of showing a dry-run. | `False` |
 | `--config` | Path to a YAML file for batch migrations. | `None` |
+| `--jobs`, `-j` | Number of parallel jobs for processing files. | `1` |
 | `--rewrite-dotted` | Rewrite direct `module.symbol` usages in code. | `False` |
 | `--format` | Apply `black` and `isort` formatting after changes. | `False` |
 | `--rollback` | Roll back a previous migration using a summary file. | `False` |
@@ -160,10 +162,9 @@ import-surgeon --rollback --summary-json summary.json
 | `--quiet` | Set the logging level (`none`, `errors`, `all`). | `none` |
 | `-v, --verbose` | Increase logging verbosity. | `0` |
 | `--version` | Show the program's version number and exit. | N/A |
-| `--jobs`, `-j` | Number of parallel jobs for processing files. | `1` |
 | `--symbol` | **Deprecated** alias for `--symbols`. | `None` |
 
-¹ Required if not using a `--config` file.
+¹ Required if not using a `--config` file or `--interactive` mode.
 
 ### Exit Codes
 
@@ -180,19 +181,17 @@ The core logic resides in the `src/import_surgeon/` directory.
 ```
 src/import_surgeon/
 ├── cli.py             # Main CLI entry point and argument parsing
-├── banner.py          # ASCII art banner
-└── modules/           # Core logic modules
-    ├── __init__.py
+├── modules/           # Core logic modules
     ├── analysis.py    # AST analysis and symbol detection
     ├── config.py      # YAML configuration loading
     ├── cst_utils.py   # LibCST helper functions
-    ├── encoding.py    # File encoding detection
-    ├── file_ops.py    # File read/write operations
-    ├── git_ops.py     # Git repository interactions
-    └── process.py     # Main file processing and orchestration
+    ├── interactive.py # Interactive TUI logic
+    ├── process.py     # Main file processing and orchestration
+    ├── rollback.py    # Rollback functionality
+    └── ...
 ```
 
-The tool works by parsing Python files into an Abstract Syntax Tree (AST) using `LibCST`, identifying import statements, and then surgically replacing them based on the migration rules. It ensures safety through backups, atomic writes, and optional Git integration.
+The tool works by parsing Python files into an Abstract Syntax Tree (AST) using `LibCST`, identifying import statements, and then surgically replacing them based on the migration rules. It ensures safety through backups, atomic writes, and optional Git integration. Parallel processing is handled via `concurrent.futures`.
 
 ---
 
@@ -203,9 +202,10 @@ The tool works by parsing Python files into an Abstract Syntax Tree (AST) using 
 *   ✅ Robust CLI & Configuration Files
 *   ✅ File Backups & Git Integration
 
-### Phase 2: The Standard
-*   Interactive TUI for selecting symbols.
-*   Symbol Dependency Analysis warning system.
+### Phase 2: The Standard (In Progress)
+*   ✅ Interactive TUI for selecting symbols.
+*   ✅ Parallel Processing for speed.
+*   ✅ Symbol Dependency Analysis warning system.
 *   Broader Python Version Support.
 
 ### Phase 3: The Ecosystem
