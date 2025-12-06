@@ -60,8 +60,8 @@ No regex. No AST guessing. No broken imports.
 ## 🚀 Quick Start
 
 ### Prerequisites
-*   Python 3.8+
-*   Powered by `libcst`, `rich`, `tqdm`, `pyyaml`, `regex`, `black`, `isort`.
+*   **Python 3.8+**
+*   Dependencies (installed automatically): `rich`, `tqdm`, `pyyaml`, `regex`, `black`, `isort`, `libcst`.
 
 ### Installation
 
@@ -69,24 +69,29 @@ No regex. No AST guessing. No broken imports.
 pip install import-surgeon
 ```
 
-> **Optional:** For improved encoding detection:
-> ```bash
-> pip install chardet
-> ```
+### Usage Examples
 
-### Usage Example
+**1. Interactive Wizard (New! 🌟)**
+launch the TUI to guide you through the refactor:
+```bash
+import-surgeon --interactive
+```
 
-**1. Basic dry-run (default)**
+**2. Basic dry-run**
+Preview changes without modifying files:
 ```bash
 import-surgeon --old-module utils --new-module core.utils --symbols load,save
 ```
 
-**2. Apply changes**
+**3. Apply changes with Formatting**
+Apply the refactor and run `black`/`isort` immediately:
 ```bash
-import-surgeon --old-module old.pkg --new-module new.pkg --symbols Foo,Bar --apply
+import-surgeon --apply --format \
+  --old-module old.pkg --new-module new.pkg --symbols Foo,Bar
 ```
 
-**3. Rewrite dotted usages too**
+**4. Rewrite dotted usages**
+Also update `old.mod.Client` to `new.mod.Client` in code:
 ```bash
 import-surgeon --apply --rewrite-dotted \
   --old-module old.mod --new-module new.mod --symbols Client
@@ -97,8 +102,10 @@ import-surgeon --apply --rewrite-dotted \
 ## ✨ Key Features
 
 *   **Accurate import rewrites**: LibCST powered symbol movement (AST-exact).
+*   **Interactive TUI**: Wizard-style guide for safe refactoring (`--interactive`).
 *   **Dotted name rewrites**: `old.module.Foo` → `new.module.Foo` if `--rewrite-dotted`.
 *   **Advanced Alias Handling**: Updates usages like `import old.pkg as o; o.Symbol()` → `new.pkg.Symbol()`.
+*   **Dependency Analysis**: Warns if moving a symbol breaks internal module dependencies.
 *   **Atomic file updates**: Guaranteed atomic writes + metadata restore.
 *   **Auto backup & rollback**: `--no-backup` optional; `--rollback` supported.
 *   **Supports aliases**: `from A import Foo as Bar` handled correctly.
@@ -107,7 +114,6 @@ import-surgeon --apply --rewrite-dotted \
 *   **Safe in CI**: `--require-clean-git` to prevent dirty changes.
 *   **Git auto-commit**: `--auto-commit "msg"`.
 *   **Optional format**: `black` + `isort` applied after changes (`--format`).
-*   **Warnings for risky spots**: Wildcards, dotted patterns, skipped relative imports.
 *   **Progress bar**: `tqdm` fallback built-in.
 *   **Parallel Processing**: Multiprocessing support via `--jobs N`.
 
@@ -117,11 +123,16 @@ import-surgeon --apply --rewrite-dotted \
 
 ### YAML Migration File (`migrate.yml`)
 
+Define complex moves in a file for reproducible migrations:
+
 ```yaml
 migrations:
   - old_module: old.auth
     new_module: services.auth
     symbols: [User, Token]
+  - old_module: utils.db
+    new_module: core.database
+    symbols: [connect, disconnect]
 ```
 
 Run with config:
@@ -130,6 +141,8 @@ import-surgeon --config migrate.yml --apply
 ```
 
 ### Rollback a Refactor
+
+Made a mistake? Undo strictly the last operation using the summary file:
 
 ```bash
 import-surgeon --rollback --summary-json summary.json
@@ -140,6 +153,7 @@ import-surgeon --rollback --summary-json summary.json
 | Flag | Description | Default |
 | :--- | :--- | :--- |
 | `target` | The target file or directory to scan. | `.` |
+| `--interactive`, `-i` | Launch the interactive TUI wizard. | `False` |
 | `--old-module` | The fully qualified module path to move symbols from. | **Required**¹ |
 | `--new-module` | The fully qualified module path to move symbols to. | **Required**¹ |
 | `--symbols` | A comma-separated list of symbols to move. | **Required**¹ |
@@ -163,7 +177,7 @@ import-surgeon --rollback --summary-json summary.json
 | `--jobs`, `-j` | Number of parallel jobs for processing files. | `1` |
 | `--symbol` | **Deprecated** alias for `--symbols`. | `None` |
 
-¹ Required if not using a `--config` file.
+¹ Required if not using a `--config` file or `--interactive` mode.
 
 ### Exit Codes
 
@@ -189,7 +203,9 @@ src/import_surgeon/
     ├── encoding.py    # File encoding detection
     ├── file_ops.py    # File read/write operations
     ├── git_ops.py     # Git repository interactions
-    └── process.py     # Main file processing and orchestration
+    ├── interactive.py # TUI Wizard logic
+    ├── process.py     # Main file processing and orchestration
+    └── rollback.py    # Rollback logic
 ```
 
 The tool works by parsing Python files into an Abstract Syntax Tree (AST) using `LibCST`, identifying import statements, and then surgically replacing them based on the migration rules. It ensures safety through backups, atomic writes, and optional Git integration.
@@ -202,21 +218,25 @@ The tool works by parsing Python files into an Abstract Syntax Tree (AST) using 
 *   ✅ AST-Based Refactoring
 *   ✅ Robust CLI & Configuration Files
 *   ✅ File Backups & Git Integration
+*   ✅ Atomic Rollback Capability
 
-### Phase 2: The Standard
-*   Interactive TUI for selecting symbols.
-*   Symbol Dependency Analysis warning system.
-*   Broader Python Version Support.
+### Phase 2: The Standard (Current)
+*   ✅ Interactive TUI for selecting symbols.
+*   ✅ Symbol Dependency Analysis warning system.
+*   ✅ Parallel Processing support.
+*   ⬜ Enhanced Dry-Run with side-by-side diffs.
+*   ⬜ "Unused Import" Cleanup.
 
 ### Phase 3: The Ecosystem
-*   IDE Integration (VSCode / PyCharm plugins).
-*   Pre-Commit Hook automation.
-*   Public API for programmatic use.
+*   ⬜ IDE Integration (VSCode / PyCharm plugins).
+*   ⬜ Pre-Commit Hook automation.
+*   ⬜ Public API for programmatic use.
 
 ### Phase 4: The Vision
-*   AI-Powered Refactoring Suggestions.
-*   Automated Code Modernization.
-*   Cross-Language Support.
+*   ⬜ AI-Powered Refactoring Suggestions.
+*   ⬜ Automated Code Modernization.
+
+See [ROADMAP.md](ROADMAP.md) for detailed timeline and "God Level" goals.
 
 ---
 
