@@ -12,7 +12,7 @@ import libcst as cst
 import libcst.metadata as md
 from libcst import ParserSyntaxError
 
-from .analysis import check_remaining_usages
+from .analysis import check_remaining_usages, check_internal_dependencies
 from .cst_utils import DottedReplacer, ImportReplacer
 from .encoding import detect_encoding
 from .file_ops import atomic_write, safe_backup
@@ -87,7 +87,9 @@ def process_file(
         changed_flag = new_content != original_content
         detail["changed_lines"] = sorted(set(all_changed_lines))
         dotted_warnings = []
+        internal_dep_warnings = []
         content_to_check = original_content if dry_run else new_content
+
         for mig in migrations:
             symbols = (
                 mig["symbols"] if isinstance(mig["symbols"], list) else [mig["symbols"]]
@@ -95,9 +97,29 @@ def process_file(
             dotted_warnings.extend(
                 check_remaining_usages(content_to_check, mig["old_module"], symbols)
             )
-        if dotted_warnings:
+
+            # Internal dependency check: verify if moving a symbol breaks usage in the source module
+            # We verify if file path matches old_module converted to path.
+            old_mod_path_suffix = mig["old_module"].replace(".", os.sep)
+
+            is_match = False
+            # Possible file paths for the module: module.py or module/__init__.py
+            candidates = [f"{old_mod_path_suffix}.py", f"{old_mod_path_suffix}{os.sep}__init__.py"]
+
+            path_str = str(file_path)
+            for cand in candidates:
+                # Check for exact match or suffix match with separator (e.g. /path/to/module.py)
+                if path_str == cand or path_str.endswith(os.sep + cand):
+                    is_match = True
+                    break
+
+            if is_match:
+                 dep_warnings = check_internal_dependencies(content_to_check, symbols)
+                 internal_dep_warnings.extend(dep_warnings)
+
+        if dotted_warnings or internal_dep_warnings:
             current_risk = max(current_risk, 2)
-        detail["warnings"] = all_warnings + dotted_warnings
+        detail["warnings"] = all_warnings + dotted_warnings + internal_dep_warnings
         detail["risk_level"] = list(risk_levels.keys())[current_risk]
         if changed_flag:
             diff = "\n".join(
