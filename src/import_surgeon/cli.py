@@ -57,6 +57,7 @@ from .modules.file_ops import find_py_files
 from .modules.git_ops import find_git_root, git_commit_changes, git_is_clean
 from .modules.process import process_file
 from .modules.rollback import perform_rollback
+from .modules.interactive import launch_interactive_mode
 from .banner import print_logo
 
 # Optional dependencies
@@ -134,17 +135,29 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s 3.0.2", help="Show program's version number and exit"
     )
+    parser.add_argument(
+        "--interactive", "-i", action="store_true", help="launch interactive mode"
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     print_logo()
     args = parse_args(argv)
+
+    if args.interactive:
+        config_data = launch_interactive_mode()
+        args.old_module = config_data.get("old_module")
+        args.new_module = config_data.get("new_module")
+        args.symbols = ",".join(config_data.get("symbols", []))
+
     config = load_config(args.config)
     for k, v in config.items():
         key = k.replace("-", "_")
         if not hasattr(args, key) or getattr(args, key) is None:
             setattr(args, key, v)
+        # If interactive mode set these, don't overwrite with empty config values
+        # (Though load_config shouldn't have them if not in config file)
 
     if args.rollback:
         if perform_rollback(args.summary_json):

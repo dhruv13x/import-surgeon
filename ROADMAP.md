@@ -26,8 +26,8 @@ This document outlines the strategic vision for `import-surgeon`, categorized in
 **Focus**: Feature parity with top competitors, user experience improvements, and robust error handling.
 **Status**: Q2 2026
 
-- [ ] **Interactive TUI**: A `rich`-powered interactive mode for selecting symbols and previewing changes before applying.
-- [ ] **Symbol Dependency Analysis**: Analyze and warn if moving a symbol will break internal dependencies in the old module.
+- [x] **Interactive TUI**: A `rich`-powered interactive mode for selecting symbols and previewing changes before applying.
+- [x] **Symbol Dependency Analysis**: Analyze and warn if moving a symbol will break internal dependencies in the old module.
 - [ ] **Enhanced Dry-Run**: Side-by-side rich diffs to visualize changes more clearly than unified diffs.
 - [ ] **"Unused Import" Cleanup**: Detect and surgically remove unused imports left behind after moving symbols.
 - [ ] **Advanced Pattern Matching**: Support regex or glob patterns for selecting symbols to move (e.g., `User*`).
