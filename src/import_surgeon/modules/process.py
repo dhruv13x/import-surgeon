@@ -3,6 +3,7 @@
 
 import difflib
 import logging
+import os
 import subprocess
 import traceback
 from pathlib import Path
