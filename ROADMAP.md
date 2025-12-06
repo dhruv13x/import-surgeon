@@ -17,7 +17,7 @@ This document outlines the strategic vision for `import-surgeon`, categorized in
 - [x] **Rollback Capability**: Restore files to previous state using `--rollback`.
 - [x] **Code Formatting**: Integration with `black` and `isort` (`--format`).
 - [x] **Parallel Processing**: Multiprocessing support to speed up scanning on large monorepos.
-- [ ] **Advanced Alias Handling**: Support for refactoring symbols accessed via module aliases (e.g., `import old.pkg as o; o.Symbol()`).
+- [x] **Advanced Alias Handling**: Support for refactoring symbols accessed via module aliases (e.g., `import old.pkg as o; o.Symbol()`).
 
 ---
 
